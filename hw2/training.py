@@ -72,6 +72,7 @@ class Trainer(abc.ABC):
         best_acc = None
 
         for epoch in range(num_epochs):
+            actual_num_epochs += 1
             verbose = False  # pass this to train/test_epoch.
             if print_every > 0 and (
                 epoch % print_every == 0 or epoch == num_epochs - 1
@@ -83,7 +84,13 @@ class Trainer(abc.ABC):
             #  - Use the train/test_epoch methods.
             #  - Save losses and accuracies in the lists above.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            train_result = self.train_epoch(dl_train, verbose = verbose, **kw)
+            train_loss.append(train_result.losses)
+            train_acc.append(train_result.accuracy)
+
+            test_result = self.test_epoch(dl_test, verbose = verbose, **kw)
+            test_loss.append(test_result.losses)
+            test_acc.append(test_result.accuracy) 
             # ========================
 
             # TODO:
@@ -94,11 +101,15 @@ class Trainer(abc.ABC):
             #    the checkpoints argument.
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
-                raise NotImplementedError()
+                best_acc = test_result.accuracy
+                self.save_checkpoint(checkpoint_filename=checkpoints)
+                epochs_without_improvement = 0
                 # ========================
             else:
                 # ====== YOUR CODE: ======
-                raise NotImplementedError()
+                epochs_without_improvement += 1
+                if epochs_without_improvement == early_stopping:
+                    break
                 # ========================
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)
@@ -257,7 +268,8 @@ class ClassifierTrainer(Trainer):
         #  - Update parameters
         #  - Classify and calculate number of correct predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        class_scores = self.model.train(X)
+        
         # ========================
 
         return BatchResult(batch_loss, num_correct)
