@@ -22,7 +22,7 @@ class Classifier(nn.Module, ABC):
 
         # TODO: Add any additional initializations here, if you need them.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        
         # ========================
 
     def forward(self, x: Tensor) -> Tensor:
@@ -34,7 +34,7 @@ class Classifier(nn.Module, ABC):
 
         # TODO: Implement the forward pass, returning raw scores from the wrapped model.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        z = self.model.forward(x)
         # ========================
         assert z.shape[0] == x.shape[0] and z.ndim == 2, "raw scores should be (N, C)"
         return z
@@ -47,8 +47,8 @@ class Classifier(nn.Module, ABC):
         """
         # TODO: Calcualtes class scores for each sample.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        z = self.forward(x)
+        # =======================       
         return self.predict_proba_scores(z)
 
     def predict_proba_scores(self, z: Tensor) -> Tensor:
@@ -59,7 +59,7 @@ class Classifier(nn.Module, ABC):
         """
         # TODO: Calculate class probabilities for the input.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return nn.Softmax(dim=1)(z)
         # ========================
 
     def classify(self, x: Tensor) -> Tensor:
@@ -128,9 +128,10 @@ class BinaryClassifier(Classifier):
         #  greater or equal to the threshold.
         #  Output should be a (N,) integer tensor.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        labels = torch.zeros(y_proba.shape[0])
+        labels[y_proba[:, self.positive_class] > self.threshold] = 1
+        return labels.to(torch.int)
         # ========================
-
 
 def plot_decision_boundary_2d(
     classifier: Classifier,
