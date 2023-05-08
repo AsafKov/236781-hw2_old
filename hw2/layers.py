@@ -395,7 +395,7 @@ class Sequential(Layer):
         # ====== YOUR CODE: ======
         out = x
         for layer in self.layers:
-            out = layer.forward(out)
+            out = layer.forward(out, **kw)
         # ========================
 
         return out
@@ -479,9 +479,13 @@ class MLP(Layer):
 
         # TODO: Build the MLP architecture as described.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        layers.append(Linear(in_features=in_features, out_features=hidden_features[0]))
+        layers.append(ReLU() if activation=="relu" else Sigmoid())
+        for input_size, output_size in zip(hidden_features, hidden_features[1:]):
+            layers.append(Linear(in_features=input_size, out_features=output_size))
+            layers.append(ReLU() if activation=="relu" else Sigmoid())
         # ========================
-
+        layers.append(Linear(in_features=hidden_features[-1], out_features=num_classes))
         self.sequence = Sequential(*layers)
 
     def forward(self, x, **kw):
