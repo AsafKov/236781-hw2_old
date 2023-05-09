@@ -298,7 +298,7 @@ class ClassifierTrainer(Trainer):
 class LayerTrainer(Trainer):
     def __init__(self, model, loss_fn, optimizer):
         # ====== YOUR CODE: ======
-        super().__init__(model)
+        self.mode = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         # ========================
@@ -313,9 +313,7 @@ class LayerTrainer(Trainer):
         #  - Calculate number of correct predictions (make sure it's an int,
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
-        class_scores = self.model.forward(X)
-        print(class_scores.shape())
-        loss = self.loss_fn(y, class_scores)
+        res = self.model.forward(batch.x)
         # ========================
 
         return BatchResult(loss, num_correct)
