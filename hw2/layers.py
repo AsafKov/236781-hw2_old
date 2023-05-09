@@ -479,11 +479,12 @@ class MLP(Layer):
 
         # TODO: Build the MLP architecture as described.
         # ====== YOUR CODE: ======
+        nonlin_fn = ReLU if activation=="relu" else Sigmoid
         layers.append(Linear(in_features=in_features, out_features=hidden_features[0]))
-        layers.append(ReLU() if activation=="relu" else Sigmoid())
+        layers.append(nonlin_fn())
         for input_size, output_size in zip(hidden_features, hidden_features[1:]):
             layers.append(Linear(in_features=input_size, out_features=output_size))
-            layers.append(ReLU() if activation=="relu" else Sigmoid())
+            layers.append(nonlin_fn())
         # ========================
         layers.append(Linear(in_features=hidden_features[-1], out_features=num_classes))
         self.sequence = Sequential(*layers)

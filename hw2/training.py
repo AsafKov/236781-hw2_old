@@ -102,7 +102,8 @@ class Trainer(abc.ABC):
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
                 best_acc = test_result.accuracy
-                self.save_checkpoint(checkpoint_filename=checkpoints)
+                if type(checkpoints) == str:
+                    self.save_checkpoint(checkpoint_filename=checkpoints)
                 epochs_without_improvement = 0
                 # ========================
             else:
@@ -298,7 +299,7 @@ class ClassifierTrainer(Trainer):
 class LayerTrainer(Trainer):
     def __init__(self, model, loss_fn, optimizer):
         # ====== YOUR CODE: ======
-        self.mode = model
+        super().__init__(model)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         # ========================
@@ -313,7 +314,16 @@ class LayerTrainer(Trainer):
         #  - Calculate number of correct predictions (make sure it's an int,
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
-        res = self.model.forward(batch.x)
+        X = X.view((X.shape[0], -1))   # Why oh why?
+        class_scores = self.model.forward(X)
+        y_pred = class_scores.argmax(dim = 1)
+        loss = self.loss_fn(class_scores, y).item()
+        num_correct = torch.sum(y_pred == y, dim=0).item()
+
+        self.optimizer.zero_grad()
+        self.model.backward(self.loss_fn.backward())
+        self.optimizer._params = self.model.params()
+        self.optimizer.step()
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -323,7 +333,12 @@ class LayerTrainer(Trainer):
 
         # TODO: Evaluate the Layer model on one batch of data.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        X = X.view(X.shape[0], -1)
+        class_scores = self.model.forward(X)
+        y_pred = class_scores.argmax(dim = 1)
+
+        loss = self.loss_fn(class_scores, y).item()
+        num_correct = torch.sum(y_pred == y, dim=0)
         # ========================
 
         return BatchResult(loss, num_correct)
