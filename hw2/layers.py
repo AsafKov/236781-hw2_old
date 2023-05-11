@@ -358,7 +358,11 @@ class Dropout(Layer):
         #  Notice that contrary to previous layers, this layer behaves
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            self.neurons_mask = torch.bernoulli(torch.ones_like(x)*(1-self.p))
+            out = x*self.neurons_mask
+        else:
+            out = x/(1-self.p)
         # ========================
 
         return out
@@ -366,7 +370,10 @@ class Dropout(Layer):
     def backward(self, dout):
         # TODO: Implement the dropout backward pass.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            dx = dout*self.neurons_mask
+        else:
+            dx = dout/(1-self.p)
         # ========================
 
         return dx
@@ -482,9 +489,14 @@ class MLP(Layer):
         nonlin_fn = ReLU if activation=="relu" else Sigmoid
         layers.append(Linear(in_features=in_features, out_features=hidden_features[0]))
         layers.append(nonlin_fn())
+        drop = dropout and nonlin_fn == ReLU #TODO: Verify
+        if drop: 
+            layers.append(Dropout(dropout))
         for input_size, output_size in zip(hidden_features, hidden_features[1:]):
             layers.append(Linear(in_features=input_size, out_features=output_size))
             layers.append(nonlin_fn())
+            if drop: 
+                layers.append(Dropout(dropout))
         # ========================
         layers.append(Linear(in_features=hidden_features[-1], out_features=num_classes))
         self.sequence = Sequential(*layers)
