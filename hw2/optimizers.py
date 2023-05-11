@@ -72,8 +72,8 @@ class VanillaSGD(Optimizer):
             #  Update the gradient according to regularization and then
             #  update the parameters tensor.
             # ====== YOUR CODE: ======
-            dp += self.reg * p
-            p -= self.learn_rate*dp
+            dp_r = dp + self.reg*p
+            p -= self.learn_rate*dp_r
             # ========================
 
 
@@ -128,11 +128,11 @@ class RMSProp(Optimizer):
 
         # TODO: Add your own initializations as needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.r_t = [0]*len(params)
         # ========================
 
     def step(self):
-        for p, dp in self.params:
+        for i, (p, dp) in enumerate(self.params):
             if dp is None:
                 continue
 
@@ -141,5 +141,8 @@ class RMSProp(Optimizer):
             # average of it's previous gradients. Use it to update the
             # parameters tensor.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            dp_r = dp + p*self.reg
+            self.r_t[i] = self.r_t[i]*self.decay + (1-self.decay)*(dp_r**2)
+            parameter_learn_rate = self.learn_rate/(torch.sqrt(self.r_t[i] + self.eps))
+            p -= parameter_learn_rate*dp_r
             # ========================
