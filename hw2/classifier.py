@@ -178,7 +178,16 @@ def plot_decision_boundary_2d(
     #  plot a contour map.
     x1_grid, x2_grid, y_hat = None, None, None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    
+    x1_min = x[:, 0].min()
+    x1_max =  x[:, 0].max()
+
+    x2_min = x[:, 1].min()
+    x2_max =  x[:, 1].max()
+
+    x1_grid, x2_grid = torch.meshgrid(torch.arange(x1_min, x1_max, dx), torch.arange(x2_min, x2_max, dx))
+    x_grid = torch.stack((x1_grid.flatten(), x2_grid.flatten()), dim=1)
+    y_hat = classifier.classify(x_grid).reshape(x1_grid.shape)
     # ========================
 
     # Plot the decision boundary as a filled contour

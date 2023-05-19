@@ -85,11 +85,15 @@ class Trainer(abc.ABC):
             #  - Save losses and accuracies in the lists above.
             # ====== YOUR CODE: ======
             train_result = self.train_epoch(dl_train, verbose = verbose, **kw)
-            train_loss.append(train_result.losses)
+            for loss in train_result.losses:
+                loss = loss.detach()
+                train_loss.append(loss)
             train_acc.append(train_result.accuracy)
 
             test_result = self.test_epoch(dl_test, verbose = verbose, **kw)
-            test_loss.append(test_result.losses)
+            for loss in test_result.losses:
+                loss = loss.detach()
+                test_loss.append(loss)
             test_acc.append(test_result.accuracy) 
             # ========================
 
@@ -269,8 +273,14 @@ class ClassifierTrainer(Trainer):
         #  - Update parameters
         #  - Classify and calculate number of correct predictions
         # ====== YOUR CODE: ======
-        class_scores = self.model.train(X)
-        
+        class_scores = self.model.forward(X)
+        y_pred = class_scores.argmax(dim=1)
+        batch_loss = self.loss_fn(class_scores, y)
+        num_correct = torch.sum(y_pred == y, dim=0).item()
+
+        self.optimizer.zero_grad()
+        batch_loss.backward()
+        self.optimizer.step()
         # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -290,7 +300,10 @@ class ClassifierTrainer(Trainer):
             #  - Forward pass
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            class_scores = self.model.forward(X)
+            y_pred = class_scores.argmax(dim=1)
+            batch_loss = self.loss_fn(class_scores, y)
+            num_correct = torch.sum(y_pred == y, dim=0).item()
             # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -314,14 +327,15 @@ class LayerTrainer(Trainer):
         #  - Calculate number of correct predictions (make sure it's an int,
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
-        X = X.view((X.shape[0], -1))   # Why oh why?
+        X = X.view((X.shape[0], -1))
         class_scores = self.model.forward(X)
-        y_pred = class_scores.argmax(dim = 1)
         loss = self.loss_fn(class_scores, y).item()
+        y_pred = class_scores.argmax(dim = 1)
         num_correct = torch.sum(y_pred == y, dim=0).item()
 
         self.optimizer.zero_grad()
-        self.model.backward(self.loss_fn.backward())
+        dout = self.loss_fn.backward()
+        self.model.backward(dout)
         self.optimizer._params = self.model.params()
         self.optimizer.step()
         # ========================
