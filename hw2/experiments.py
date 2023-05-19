@@ -45,9 +45,22 @@ def mlp_experiment(
     #  Note: use print_every=0, verbose=False, plot=False where relevant to prevent
     #  output from this function.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    model = BinaryClassifier(model=MLP(in_dim=2, dims=[*[width]*depth, 2], nonlins=[*['tanh']*depth, 'none']))
+    loss_fn = torch.nn.CrossEntropyLoss()
+    params = dict(lr=0.05, weight_decay=0.003, momentum=0.75)
+    optimizer = torch.optim.SGD(params=model.parameters(), **params)
+    classifier = ClassifierTrainer(model, loss_fn, optimizer)
+
+    result = classifier.fit(dl_train, dl_valid, num_epochs=n_epochs, print_every=-1)
+    valid_acc = result.test_acc[-1]
+
+    valid_x, valid_y = dl_valid.dataset.tensors
+    optim_thresh = select_roc_thresh(model, valid_x, valid_y, plot=False)
+    model.threshold = optim_thresh
+
+    test_acc = classifier.test_epoch(dl_test, verbose=False)[1]
     # ========================
-    return model, thresh, valid_acc, test_acc
+    return model, optim_thresh, valid_acc, test_acc
 
 
 def cnn_experiment(
