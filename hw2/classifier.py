@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from torch import Tensor, nn
 from typing import Optional
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve, RocCurveDisplay
 
 
 class Classifier(nn.Module, ABC):
@@ -219,9 +219,13 @@ def select_roc_thresh(
     #  Calculate the index of the optimal threshold as optimal_thresh_idx.
     #  Calculate the optimal threshold as optimal_thresh.
     fpr, tpr, thresh = None, None, None
-    optimal_theresh_idx, optimal_thresh = None, None
+    optimal_thresh_idx, optimal_thresh = None, None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    class_scores = classifier.predict_proba(x)[:, classifier.positive_class]
+    class_scores = class_scores.detach()
+    fpr, tpr, thresh = roc_curve(y, class_scores)
+    optimal_thresh_idx = torch.argmax(torch.tensor(tpr - fpr))
+    optimal_thresh = thresh[optimal_thresh_idx]
     # ========================
 
     if plot:
